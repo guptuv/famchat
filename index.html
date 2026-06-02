@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Family — Chat Wrapped</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root,[data-theme="dark"]{
+  --bg:#0c0c0f;--bg2:#13131a;--bg3:#1a1a25;--card:#16161f;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.12);
+  --accent:#7c6fff;--accent2:#ff6b9d;--accent3:#4ecdc4;--accent4:#ffd93d;
+  --text:#f0f0f5;--muted:#7b7b90;--dim:#3a3a50;
+  --shadow:rgba(0,0,0,0.5);--noise-op:0.4;
+  --glow-op:0.15;--hero-text:#f0f0f5;
+}
+[data-theme="light"]{
+  --bg:#f8f7f4;--bg2:#f0ede8;--bg3:#e8e4de;--card:#ffffff;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --accent:#5b4fff;--accent2:#e8356b;--accent3:#1aa89f;--accent4:#c49a00;
+  --text:#1a1a2e;--muted:#6b6b80;--dim:#b0adb8;
+  --shadow:rgba(0,0,0,0.1);--noise-op:0.15;
+  --glow-op:0.12;--hero-text:#1a1a2e;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--bg);color:var(--text);
+  overflow-x:hidden;font-size:16px;line-height:1.6;
+  transition:background .4s,color .4s;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:9999;opacity:var(--noise-op);transition:opacity .4s;
+}
+
+/* ─── NAV ─── */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:200;
+  padding:.9rem 2rem;display:flex;align-items:center;justify-content:space-between;
+  background:rgba(12,12,15,0.75);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);transition:background .4s,border-color .4s;
+}
+[data-theme="light"] nav{background:rgba(248,247,244,0.85);}
+.nav-logo{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;letter-spacing:-.01em}
+.nav-logo span{color:var(--accent)}
+.nav-links{display:flex;gap:1.75rem;align-items:center}
+.nav-links a{font-size:13px;color:var(--muted);text-decoration:none;transition:color .2s;letter-spacing:.03em}
+.nav-links a:hover{color:var(--text)}
+.nav-right{display:flex;align-items:center;gap:1rem}
+
+/* ─── THEME TOGGLE ─── */
+.theme-toggle{
+  width:52px;height:28px;border-radius:100px;
+  background:var(--bg3);border:1.5px solid var(--border2);
+  cursor:pointer;position:relative;transition:background .3s,border-color .3s;
+  flex-shrink:0;outline:none;
+}
+.theme-toggle:focus-visible{box-shadow:0 0 0 3px var(--accent)}
+.toggle-thumb{
+  width:20px;height:20px;border-radius:50%;
+  position:absolute;top:3px;left:3px;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),background .3s;
+  display:flex;align-items:center;justify-content:center;font-size:11px;
+  background:var(--accent);
+}
+[data-theme="light"] .toggle-thumb{transform:translateX(24px);background:var(--accent4)}
+.toggle-icon{pointer-events:none;line-height:1}
+
+/* ─── PROGRESS BAR ─── */
+#progress-bar{
+  position:fixed;top:0;left:0;height:3px;z-index:300;
+  background:linear-gradient(90deg,var(--accent),var(--accent2),var(--accent3));
+  transition:width .1s;width:0%;
+}
+
+/* ─── HERO ─── */
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;
+  padding:6rem 2rem 4rem;position:relative;overflow:hidden;
+}
+.hero-glow{position:absolute;border-radius:50%;filter:blur(130px);opacity:var(--glow-op);pointer-events:none;transition:opacity .4s}
+.hero-glow-1{width:600px;height:600px;background:var(--accent);top:-200px;left:-150px}
+.hero-glow-2{width:500px;height:500px;background:var(--accent2);bottom:-150px;right:-120px}
+.hero-glow-3{width:400px;height:400px;background:var(--accent3);top:50%;left:50%;transform:translate(-50%,-50%)}
+.hero-tag{
+  font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--accent);
+  border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);
+  padding:6px 18px;border-radius:100px;margin-bottom:2rem;display:inline-block;
+  animation:fadeUp .6s ease both;
+}
+.hero-title{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(3.5rem,9vw,7rem);font-weight:900;line-height:1;
+  margin-bottom:1.5rem;animation:fadeUp .7s .1s ease both;
+  color:var(--hero-text);
+}
+.hero-title em{font-style:italic;color:var(--accent)}
+.hero-sub{
+  font-size:1.1rem;color:var(--muted);max-width:520px;
+  margin:0 auto 3rem;font-weight:300;animation:fadeUp .7s .2s ease both;
+}
+.hero-stats{display:flex;gap:3rem;animation:fadeUp .7s .3s ease both;flex-wrap:wrap;justify-content:center}
+.hero-stat-num{font-family:'Playfair Display',serif;font-size:2.4rem;font-weight:700;line-height:1}
+.hero-stat-label{font-size:12px;color:var(--muted);margin-top:4px;letter-spacing:.05em}
+.scroll-hint{
+  position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+  color:var(--muted);font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+  animation:fadeUp 1s .7s ease both;
+}
+.scroll-hint-line{width:1px;height:40px;background:linear-gradient(to bottom,var(--muted),transparent);animation:scrollPulse 2s infinite}
+
+/* ─── SECTIONS ─── */
+section{max-width:1100px;margin:0 auto;padding:5rem 2rem}
+.section-label{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin-bottom:1rem}
+.section-title{font-family:'Playfair Display',serif;font-size:clamp(2rem,4vw,3rem);font-weight:700;margin-bottom:3rem;line-height:1.15}
+
+/* ─── KPI ─── */
+.kpi-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+  gap:1px;background:var(--border);border:1px solid var(--border);
+  border-radius:16px;overflow:hidden;margin-bottom:4rem;
+}
+.kpi{background:var(--card);padding:1.75rem 1.5rem;transition:background .2s,transform .2s;cursor:default}
+.kpi:hover{background:var(--bg3);transform:scale(1.02)}
+.kpi-num{font-family:'Playfair Display',serif;font-size:2.2rem;font-weight:700;line-height:1;margin-bottom:6px}
+.kpi-label{font-size:13px;color:var(--muted)}
+.kpi-sub{font-size:11px;color:var(--dim);margin-top:4px}
+
+/* ─── CHART CARDS ─── */
+.chart-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:2rem;margin-bottom:1.5rem;
+  transition:background .3s,border-color .3s;
+}
+.chart-card-title{font-size:15px;font-weight:500;margin-bottom:.4rem;color:var(--text)}
+.chart-card-sub{font-size:12px;color:var(--muted);margin-bottom:1.5rem}
+.legend{display:flex;flex-wrap:wrap;gap:14px;margin-bottom:1.25rem}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)}
+.legend-dot{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+
+/* ─── PERSON CARDS ─── */
+.person-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:4rem}
+.person-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;padding:1.5rem;
+  transition:transform .2s,border-color .2s,background .3s;
+  position:relative;overflow:hidden;
+}
+.person-card:hover{transform:translateY(-4px);border-color:var(--border2);box-shadow:0 12px 40px var(--shadow)}
+.avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:500;font-size:15px;margin-bottom:1rem}
+.person-name{font-size:15px;font-weight:500;margin-bottom:2px}
+.person-role{font-size:12px;color:var(--muted);margin-bottom:1rem}
+.pstat{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;border-bottom:1px solid var(--border)}
+.pstat:last-of-type{border-bottom:none}
+.pstat-label{color:var(--muted)}
+.pstat-val{font-weight:500}
+.mini-bar{background:var(--bg3);border-radius:3px;height:4px;margin-top:1rem;overflow:hidden}
+.mini-bar-fill{height:100%;border-radius:3px;transition:width 1s ease}
+
+/* ─── HEATMAP ─── */
+.heatmap-wrap{overflow-x:auto}
+.heatmap-row{display:grid;grid-template-columns:70px repeat(24,1fr);gap:3px;margin-bottom:3px;align-items:center}
+.heatmap-lbl{font-size:12px;color:var(--muted);text-align:right;padding-right:10px}
+.heatmap-cell{height:22px;border-radius:3px;cursor:default;transition:opacity .15s}
+.heatmap-cell:hover{opacity:.65;transform:scale(1.1)}
+.heatmap-hours{display:grid;grid-template-columns:70px repeat(24,1fr);gap:3px;margin-bottom:.5rem}
+.heatmap-hour-lbl{font-size:10px;color:var(--dim);text-align:center}
+
+/* ─── TIMELINE ─── */
+.timeline{position:relative;padding-left:2rem}
+.timeline::before{content:'';position:absolute;left:6px;top:0;bottom:0;width:1px;background:var(--border)}
+.tl-item{position:relative;padding:0 0 2.5rem 1.5rem}
+.tl-dot{position:absolute;left:-1.5rem;top:4px;width:13px;height:13px;border-radius:50%;border:2px solid var(--bg)}
+.tl-year{font-size:11px;color:var(--accent);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.tl-title{font-size:16px;font-weight:500;margin-bottom:6px}
+.tl-desc{font-size:14px;color:var(--muted);line-height:1.65}
+
+/* ─── FUN FACTS ─── */
+.fun-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem}
+.fun-card{
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:1.5rem;transition:transform .2s,background .3s,border-color .3s;
+}
+.fun-card:hover{transform:translateY(-3px);border-color:var(--border2)}
+.fun-icon{font-size:1.5rem;margin-bottom:10px}
+.fun-title{font-size:14px;font-weight:500;margin-bottom:6px}
+.fun-desc{font-size:13px;color:var(--muted);line-height:1.6}
+
+/* ─── STORY ─── */
+.story-block{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:3rem;transition:background .3s}
+.story-block p{font-size:15px;color:var(--muted);line-height:1.85;margin-bottom:1.25rem;font-weight:300}
+.story-block p:last-child{margin-bottom:0}
+.story-block strong{color:var(--text);font-weight:500}
+
+/* ─── SEARCH ─── */
+.search-wrap{
+  position:relative;margin-bottom:2rem;
+}
+.search-input{
+  width:100%;padding:.85rem 1rem .85rem 3rem;
+  background:var(--card);border:1px solid var(--border2);border-radius:12px;
+  color:var(--text);font-size:14px;font-family:'DM Sans',sans-serif;
+  outline:none;transition:border-color .2s,background .3s;
+}
+.search-input:focus{border-color:var(--accent)}
+.search-icon{position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;pointer-events:none}
+#search-results{font-size:13px;color:var(--muted);padding:.5rem 0}
+
+/* ─── COUNTER ANIMATION ─── */
+.count-up{display:inline-block}
+
+/* ─── SHARE BUTTON ─── */
+.share-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:.75rem 1.5rem;background:var(--accent);color:#fff;
+  border:none;border-radius:100px;font-size:13px;font-family:'DM Sans',sans-serif;
+  cursor:pointer;font-weight:500;transition:opacity .2s,transform .2s;
+  margin-top:1.5rem;
+}
+.share-btn:hover{opacity:.88;transform:scale(1.02)}
+.share-btn:active{transform:scale(.97)}
+
+/* ─── TROPHY PODIUM ─── */
+.podium{display:flex;align-items:flex-end;justify-content:center;gap:12px;height:180px;margin:2rem 0}
+.podium-bar{
+  flex:1;max-width:130px;border-radius:10px 10px 0 0;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  padding:1rem .5rem;font-size:12px;color:#fff;font-weight:500;
+  transition:height .8s cubic-bezier(.34,1.3,.64,1);position:relative;
+  cursor:default;
+}
+.podium-bar:hover{filter:brightness(1.1)}
+.podium-rank{font-size:20px;margin-bottom:4px}
+.podium-name{font-size:11px;opacity:.9;text-align:center}
+.podium-count{font-size:13px;font-weight:600;margin-top:4px}
+
+/* ─── EMOJI WALL ─── */
+.emoji-wall{
+  display:flex;flex-wrap:wrap;gap:8px;
+  background:var(--card);border:1px solid var(--border);border-radius:16px;
+  padding:2rem;margin-bottom:1.5rem;
+}
+.emoji-bubble{
+  background:var(--bg3);border-radius:100px;padding:6px 14px;
+  font-size:13px;display:flex;align-items:center;gap:6px;
+  transition:transform .2s;cursor:default;border:1px solid var(--border);
+}
+.emoji-bubble:hover{transform:scale(1.1)}
+.emoji-count{font-size:11px;color:var(--muted)}
+
+/* ─── ANIMATED COUNTER ─── */
+@keyframes countUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ─── ANIMATIONS ─── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
+@keyframes scrollPulse{0%,100%{opacity:.4}50%{opacity:1}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-20px)}to{opacity:1;transform:none}}
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal.visible{opacity:1;transform:none}
+.reveal-left{opacity:0;transform:translateX(-30px);transition:opacity .7s ease,transform .7s ease}
+.reveal-left.visible{opacity:1;transform:none}
+.reveal-right{opacity:0;transform:translateX(30px);transition:opacity .7s ease,transform .7s ease}
+.reveal-right.visible{opacity:1;transform:none}
+
+/* ─── DIVIDER ─── */
+.divider{width:100%;height:1px;background:var(--border)}
+
+/* ─── FOOTER ─── */
+footer{text-align:center;padding:3rem 2rem;color:var(--dim);font-size:13px}
+
+/* ─── TOOLTIP ─── */
+.tooltip-custom{
+  position:fixed;background:var(--card);border:1px solid var(--border2);
+  border-radius:8px;padding:6px 12px;font-size:12px;color:var(--text);
+  pointer-events:none;z-index:500;display:none;box-shadow:0 8px 24px var(--shadow);
+}
+
+/* ─── BACK TO TOP ─── */
+#back-top{
+  position:fixed;bottom:2rem;right:2rem;
+  width:44px;height:44px;border-radius:50%;
+  background:var(--accent);color:#fff;border:none;
+  cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;
+  opacity:0;transform:scale(0);transition:opacity .3s,transform .3s;
+  box-shadow:0 4px 20px rgba(124,111,255,.4);z-index:150;
+}
+#back-top.visible{opacity:1;transform:scale(1)}
+#back-top:hover{transform:scale(1.1) !important}
+
+/* ─── GRID HELPERS ─── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem}
+@media(max-width:700px){.two-col{grid-template-columns:1fr}.nav-links .hide-mobile{display:none}}
+@media(max-width:500px){.nav-links{display:none}}
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+<div class="tooltip-custom" id="tooltip"></div>
+<button id="back-top" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">My<span>Family</span></div>
+  <div class="nav-links">
+    <a href="#stats" class="hide-mobile">Stats</a>
+    <a href="#members" class="hide-mobile">Members</a>
+    <a href="#activity" class="hide-mobile">Activity</a>
+    <a href="#timeline" class="hide-mobile">Timeline</a>
+    <a href="#story" class="hide-mobile">Story</a>
+  </div>
+  <div class="nav-right">
+    <button class="theme-toggle" id="themeToggle" aria-label="Toggle light/dark mode" title="Toggle theme">
+      <div class="toggle-thumb"><span class="toggle-icon" id="toggleIcon">🌙</span></div>
+    </button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-glow hero-glow-1"></div>
+  <div class="hero-glow hero-glow-2"></div>
+  <div class="hero-glow hero-glow-3"></div>
+  <div class="hero-tag">WhatsApp Group · June 2021 — May 2026</div>
+  <h1 class="hero-title">My <em>Family</em><br>Wrapped</h1>
+  <p class="hero-sub">5 years of conversations, memes, birthday blasts, and everyday love — analyzed and visualized.</p>
+  <div class="hero-stats">
+    <div><div class="hero-stat-num count-up" style="color:var(--accent)" data-target="30233">0</div><div class="hero-stat-label">Messages</div></div>
+    <div><div class="hero-stat-num count-up" style="color:var(--accent2)" data-target="14778">0</div><div class="hero-stat-label">Media shared</div></div>
+    <div><div class="hero-stat-num count-up" style="color:var(--accent3)" data-target="3554">0</div><div class="hero-stat-label">Links shared</div></div>
+    <div><div class="hero-stat-num count-up" style="color:var(--accent4)" data-target="1812">0</div><div class="hero-stat-label">Active days</div></div>
+  </div>
+  <div class="scroll-hint"><div>Scroll</div><div class="scroll-hint-line"></div></div>
+</div>
+
+<div class="divider"></div>
+
+<!-- STATS -->
+<section id="stats">
+  <div class="section-label reveal">By the numbers</div>
+  <h2 class="section-title reveal">Five years,<br>one group chat.</h2>
+
+  <div class="kpi-grid reveal">
+    <div class="kpi"><div class="kpi-num" style="color:var(--accent)">30,233</div><div class="kpi-label">Total messages</div><div class="kpi-sub">All non-system</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--accent2)">15,455</div><div class="kpi-label">Text messages</div><div class="kpi-sub">Actual conversations</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--accent3)">14,778</div><div class="kpi-label">Media files</div><div class="kpi-sub">Photos, videos, GIFs</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:var(--accent4)">3,554</div><div class="kpi-label">Links shared</div><div class="kpi-sub">YT, news, Insta</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:#ff8c69">16.7</div><div class="kpi-label">Avg messages/day</div><div class="kpi-sub">Every single day</div></div>
+    <div class="kpi"><div class="kpi-num" style="color:#a8e6cf">453</div><div class="kpi-label">Record single day</div><div class="kpi-sub">Sep 5, 2021 🎂</div></div>
+  </div>
+
+  <div class="chart-card reveal">
+    <div class="chart-card-title">Monthly message volume</div>
+    <div class="chart-card-sub">June 2021 — May 2026 · Peak: November 2022 with 1,276 messages</div>
+    <div style="position:relative;width:100%;height:260px"><canvas id="timelineChart" role="img" aria-label="Monthly message volume"></canvas></div>
+  </div>
+
+  <div class="chart-card reveal">
+    <div class="chart-card-title">Year-by-year growth</div>
+    <div class="chart-card-sub">The group grew 4× from 2021 to 2025</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#7c6fff"></div>Yuvraj</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ff6b9d"></div>Puja di</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#4ecdc4"></div>Papa Jio</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#ffd93d"></div>Mummy</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#6bb5ff"></div>Papa BSNL</div>
+    </div>
+    <div style="position:relative;width:100%;height:260px"><canvas id="yearlyChart" role="img" aria-label="Yearly stacked bars"></canvas></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- MEMBERS -->
+<section id="members">
+  <div class="section-label reveal">The cast</div>
+  <h2 class="section-title reveal">Meet the<br>family.</h2>
+
+  <!-- PODIUM -->
+  <div class="chart-card reveal" style="margin-bottom:2rem">
+    <div class="chart-card-title">Top 3 most active members — All time</div>
+    <div class="chart-card-sub">Total messages sent since June 2021</div>
+    <div class="podium" id="podium"></div>
+  </div>
+
+  <div class="person-grid">
+    <div class="person-card reveal">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#7c6fff;border-radius:16px 16px 0 0"></div>
+      <div class="avatar" style="background:rgba(124,111,255,.15);color:#7c6fff">YG</div>
+      <div class="person-name">Yuvraj Gupta</div><div class="person-role">Most active · night owl</div>
+      <div class="pstat"><span class="pstat-label">Messages</span><span class="pstat-val">10,556 (35%)</span></div>
+      <div class="pstat"><span class="pstat-label">Words written</span><span class="pstat-val">30,830</span></div>
+      <div class="pstat"><span class="pstat-label">Avg words/msg</span><span class="pstat-val">5.2</span></div>
+      <div class="pstat"><span class="pstat-label">Emojis used</span><span class="pstat-val">2,971</span></div>
+      <div class="pstat"><span class="pstat-label">Media sent</span><span class="pstat-val">4,614</span></div>
+      <div class="pstat"><span class="pstat-label">Peak hour</span><span class="pstat-val">10 PM 🌙</span></div>
+      <div class="pstat"><span class="pstat-label">Top emojis</span><span class="pstat-val">🙏 🥳</span></div>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:100%;background:#7c6fff"></div></div>
+    </div>
+    <div class="person-card reveal">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#ff6b9d;border-radius:16px 16px 0 0"></div>
+      <div class="avatar" style="background:rgba(255,107,157,.15);color:#ff6b9d">PD</div>
+      <div class="person-name">Puja di</div><div class="person-role">Media queen · silent broadcaster</div>
+      <div class="pstat"><span class="pstat-label">Messages</span><span class="pstat-val">8,522 (28%)</span></div>
+      <div class="pstat"><span class="pstat-label">Words written</span><span class="pstat-val">9,593</span></div>
+      <div class="pstat"><span class="pstat-label">Avg words/msg</span><span class="pstat-val">2.7</span></div>
+      <div class="pstat"><span class="pstat-label">Emojis used</span><span class="pstat-val">2,678</span></div>
+      <div class="pstat"><span class="pstat-label">Media sent</span><span class="pstat-val">4,975 🏆</span></div>
+      <div class="pstat"><span class="pstat-label">Peak hour</span><span class="pstat-val">8 PM</span></div>
+      <div class="pstat"><span class="pstat-label">Top emojis</span><span class="pstat-val">👍 😂 ❤️</span></div>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:81%;background:#ff6b9d"></div></div>
+    </div>
+    <div class="person-card reveal">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#4ecdc4;border-radius:16px 16px 0 0"></div>
+      <div class="avatar" style="background:rgba(78,205,196,.15);color:#4ecdc4">PJ</div>
+      <div class="person-name">Papa Jio</div><div class="person-role">Conversation starter #1</div>
+      <div class="pstat"><span class="pstat-label">Messages</span><span class="pstat-val">6,773 (22%)</span></div>
+      <div class="pstat"><span class="pstat-label">Words written</span><span class="pstat-val">14,054</span></div>
+      <div class="pstat"><span class="pstat-label">Avg words/msg</span><span class="pstat-val">4.2</span></div>
+      <div class="pstat"><span class="pstat-label">Emojis used</span><span class="pstat-val">2,140</span></div>
+      <div class="pstat"><span class="pstat-label">Initiations</span><span class="pstat-val">1,181 🏆</span></div>
+      <div class="pstat"><span class="pstat-label">Peak hour</span><span class="pstat-val">8 PM</span></div>
+      <div class="pstat"><span class="pstat-label">Top emojis</span><span class="pstat-val">👍 😍 👌 🥰</span></div>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:64%;background:#4ecdc4"></div></div>
+    </div>
+    <div class="person-card reveal">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#ffd93d;border-radius:16px 16px 0 0"></div>
+      <div class="avatar" style="background:rgba(255,217,61,.15);color:#c9a800">MM</div>
+      <div class="person-name">Mummy</div><div class="person-role">Warmth in every message</div>
+      <div class="pstat"><span class="pstat-label">Messages</span><span class="pstat-val">3,523 (12%)</span></div>
+      <div class="pstat"><span class="pstat-label">Words written</span><span class="pstat-val">9,101</span></div>
+      <div class="pstat"><span class="pstat-label">Avg words/msg</span><span class="pstat-val">3.8</span></div>
+      <div class="pstat"><span class="pstat-label">Emojis used</span><span class="pstat-val">2,438</span></div>
+      <div class="pstat"><span class="pstat-label">Media sent</span><span class="pstat-val">1,125</span></div>
+      <div class="pstat"><span class="pstat-label">Peak hour</span><span class="pstat-val">9 PM</span></div>
+      <div class="pstat"><span class="pstat-label">Top emojis</span><span class="pstat-val">🤣 😊 😘 😍</span></div>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:33%;background:#ffd93d"></div></div>
+    </div>
+    <div class="person-card reveal">
+      <div style="position:absolute;top:0;left:0;right:0;height:3px;background:#6bb5ff;border-radius:16px 16px 0 0"></div>
+      <div class="avatar" style="background:rgba(107,181,255,.15);color:#6bb5ff">PB</div>
+      <div class="person-name">Papa BSNL</div><div class="person-role">Early bird · retired 2023</div>
+      <div class="pstat"><span class="pstat-label">Messages</span><span class="pstat-val">838 (2.8%)</span></div>
+      <div class="pstat"><span class="pstat-label">Words written</span><span class="pstat-val">494</span></div>
+      <div class="pstat"><span class="pstat-label">Avg words/msg</span><span class="pstat-val">2.8</span></div>
+      <div class="pstat"><span class="pstat-label">Emojis used</span><span class="pstat-val">109</span></div>
+      <div class="pstat"><span class="pstat-label">Media sent</span><span class="pstat-val">662</span></div>
+      <div class="pstat"><span class="pstat-label">Peak hour</span><span class="pstat-val">8 AM 🌅</span></div>
+      <div class="pstat"><span class="pstat-label">Top emojis</span><span class="pstat-val">👍 ❤️ 👌</span></div>
+      <div class="mini-bar"><div class="mini-bar-fill" style="width:8%;background:#6bb5ff"></div></div>
+    </div>
+  </div>
+
+  <!-- DONUT + EMOJI WALL -->
+  <div class="two-col" style="margin-bottom:1.5rem">
+    <div class="chart-card reveal-left">
+      <div class="chart-card-title">Message share</div>
+      <div class="chart-card-sub">Who dominates the conversation?</div>
+      <div style="position:relative;width:100%;height:220px"><canvas id="donutChart" role="img" aria-label="Message share donut chart"></canvas></div>
+      <div class="legend" style="margin-top:1rem;margin-bottom:0">
+        <div class="legend-item"><div class="legend-dot" style="background:#7c6fff"></div>Yuvraj 34.9%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ff6b9d"></div>Puja di 28.2%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#4ecdc4"></div>Papa Jio 22.4%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#ffd93d"></div>Mummy 11.7%</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#6bb5ff"></div>Papa BSNL 2.8%</div>
+      </div>
+    </div>
+    <div class="chart-card reveal-right">
+      <div class="chart-card-title">Conversation starters</div>
+      <div class="chart-card-sub">Who kicks off threads most? (gap &gt; 3h)</div>
+      <div style="position:relative;width:100%;height:220px"><canvas id="initiationChart" role="img" aria-label="Conversation initiations"></canvas></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- EMOJI SECTION -->
+<section>
+  <div class="section-label reveal">Emoji report</div>
+  <h2 class="section-title reveal">How the family<br>expresses itself.</h2>
+  <div class="emoji-wall reveal" id="emojiWall"></div>
+  <div class="chart-card reveal">
+    <div class="chart-card-title">Total emojis per member</div>
+    <div class="chart-card-sub">10,336 emojis sent across 5 years</div>
+    <div style="position:relative;width:100%;height:200px"><canvas id="emojiChart" role="img" aria-label="Emoji usage per member"></canvas></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ACTIVITY -->
+<section id="activity">
+  <div class="section-label reveal">Patterns</div>
+  <h2 class="section-title reveal">When does<br>the family chat?</h2>
+
+  <div class="chart-card reveal">
+    <div class="chart-card-title">Hourly activity heatmap</div>
+    <div class="chart-card-sub">Each row = one member · darker = more messages · hover for count</div>
+    <div class="heatmap-wrap" style="margin-top:.5rem">
+      <div class="heatmap-hours">
+        <div></div>
+        <div class="heatmap-hour-lbl">12a</div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div>
+        <div class="heatmap-hour-lbl">4a</div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div>
+        <div class="heatmap-hour-lbl">8a</div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div>
+        <div class="heatmap-hour-lbl">12p</div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div>
+        <div class="heatmap-hour-lbl">4p</div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div>
+        <div class="heatmap-hour-lbl">8p</div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl"></div><div class="heatmap-hour-lbl">11p</div>
+      </div>
+      <div id="heatmap"></div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div class="chart-card reveal-left">
+      <div class="chart-card-title">By day of week</div>
+      <div class="chart-card-sub">Sundays are peak family time</div>
+      <div style="position:relative;width:100%;height:200px"><canvas id="weekdayChart" role="img" aria-label="Messages by weekday"></canvas></div>
+    </div>
+    <div class="chart-card reveal-right">
+      <div class="chart-card-title">Most used words</div>
+      <div class="chart-card-sub">Hindi + English mix</div>
+      <div style="position:relative;width:100%;height:200px"><canvas id="wordsChart" role="img" aria-label="Top words"></canvas></div>
+    </div>
+  </div>
+
+  <!-- SEARCH -->
+  <div class="chart-card reveal" style="margin-top:1.5rem">
+    <div class="chart-card-title">Search the stats</div>
+    <div class="chart-card-sub">Type a name or keyword to find insights</div>
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input class="search-input" id="searchInput" type="text" placeholder="Try 'Yuvraj', 'emoji', 'media', 'Sunday'...">
+    </div>
+    <div id="search-results">Start typing to search across all statistics...</div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- TIMELINE -->
+<section id="timeline">
+  <div class="section-label reveal">History</div>
+  <h2 class="section-title reveal">The group's<br>journey.</h2>
+  <div class="timeline reveal">
+    <div class="tl-item"><div class="tl-dot" style="background:#7c6fff"></div><div class="tl-year">June 2021 · Group begins</div><div class="tl-title">A quiet start 👋</div><div class="tl-desc">218 messages in the first month. Mummy kicks things off with a viral Hindi milk-roti recipe joke. Papa BSNL is the early dominant voice with an 8 AM peak — the group's only genuine early bird.</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:#ff6b9d"></div><div class="tl-year">September 5, 2021 · All-time record day</div><div class="tl-title">🎂 Revant's birthday blast — 453 messages</div><div class="tl-desc">The group's single-day record, 10× the daily average. Papa BSNL sends 20+ media files consecutively. Every member shows up. The family's greatest collective effort in one day.</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:#555"></div><div class="tl-year">Oct – Dec 2021</div><div class="tl-title">The quiet phase</div><div class="tl-desc">Activity drops to 46–112 messages per month. The group rests. Only 254 total messages across 3 months — a stark contrast to the birthday chaos.</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:#4ecdc4"></div><div class="tl-year">November 28, 2021</div><div class="tl-title">Papa Jio joins the chat</div><div class="tl-desc">He enters quietly but transforms the group. Over 5 years he becomes the #1 conversation starter with 1,181 thread initiations — more than Yuvraj and Puja di combined.</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:#ffd93d"></div><div class="tl-year">2022 · Education season</div><div class="tl-title">📚 JEE & CBSE exam discussions</div><div class="tl-desc">205 exam-related messages concentrated in 2022. JEE Main dates, CBSE result links, admit card updates — the group becomes a family information relay board.</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:#ff6b9d"></div><div class="tl-year">November 2022 · Monthly peak ever</div><div class="tl-title">🔥 1,276 messages in one month</div><div class="tl-desc">The group's busiest month until 2026. All members simultaneously active. High-energy family communication at its most intense.</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:#a8e6cf"></div><div class="tl-year">December 25, 2022</div><div class="tl-title">🎄 Christmas — 122 messages</div><div class="tl-desc">Second busiest single day. Yuvraj opens with "Merry Christmas Dhunmun 🥳🥳🥳" and the family joins in. A warm, celebratory day that shows the group at its most joyful.</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:#6bb5ff"></div><div class="tl-year">July 22, 2023</div><div class="tl-title">Papa BSNL goes silent forever</div><div class="tl-desc">Last message July 22, 2023. From 829 messages in 2021 to 12 in 2023 to nothing. His BSNL number was likely replaced by Papa Jio's Jio SIM — a quiet generational phone upgrade.</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:#7c6fff"></div><div class="tl-year">2024 – 2025 · Maturity</div><div class="tl-title">Yuvraj becomes the heartbeat</div><div class="tl-desc">3,136 messages in 2025 alone. Papa Jio also surges to 2,153. The group averages 20+ messages per day — a true daily communication hub for the whole family.</div></div>
+    <div class="tl-item"><div class="tl-dot" style="background:#ff6b9d"></div><div class="tl-year">April – May 2026 · Right now</div><div class="tl-title">🔥 New records — the group is growing</div><div class="tl-desc">April 2026 hit 1,082 messages — the new monthly record. May 2026 is at 1,022. After 5 years, this family is more connected than ever. The story isn't over.</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- FUN FACTS -->
+<section>
+  <div class="section-label reveal">Insights</div>
+  <h2 class="section-title reveal">Fun facts &amp;<br>surprises.</h2>
+  <div class="fun-grid">
+    <div class="fun-card reveal"><div class="fun-icon">🏆</div><div class="fun-title">Yuvraj runs the group</div><div class="fun-desc">34.9% of all messages. Sent more than Mummy and Papa BSNL combined. His share grows every single year.</div></div>
+    <div class="fun-card reveal"><div class="fun-icon">📸</div><div class="fun-title">Puja di: show, don't tell</div><div class="fun-desc">Most media sent (4,975) but shortest text messages (avg 2.7 words). The group's silent media broadcaster.</div></div>
+    <div class="fun-card reveal"><div class="fun-icon">🌙</div><div class="fun-title">Night owl vs early bird</div><div class="fun-desc">Yuvraj peaks at 10 PM. Papa BSNL peaked at 8 AM — the only genuine early riser the group ever had.</div></div>
+    <div class="fun-card reveal"><div class="fun-icon">💬</div><div class="fun-title">Papa Jio: the igniter</div><div class="fun-desc">Starts 1,181 conversations despite being 3rd in total messages. Highest initiation-to-message ratio of anyone.</div></div>
+    <div class="fun-card reveal"><div class="fun-icon">🎂</div><div class="fun-title">The birthday that broke records</div><div class="fun-desc">Sep 5, 2021 — 453 messages. Nearly 10× the daily average. Still the group's greatest single-day effort.</div></div>
+    <div class="fun-card reveal"><div class="fun-icon">📈</div><div class="fun-title">4× growth in 4 years</div><div class="fun-desc">From 1,861 messages in 2021 to 7,562 in 2025. April 2026 just set a new monthly record of 1,082.</div></div>
+    <div class="fun-card reveal"><div class="fun-icon">☀️</div><div class="fun-title">Sundays belong to family</div><div class="fun-desc">5,982 messages on Sundays — 62% more than Thursday (the quietest day of the week).</div></div>
+    <div class="fun-card reveal"><div class="fun-icon">🔗</div><div class="fun-title">Link-sharing machine</div><div class="fun-desc">3,554 links — roughly 2 per day every day for 5 years. Papa Jio leads: YouTube Shorts, news, viral videos.</div></div>
+    <div class="fun-card reveal"><div class="fun-icon">❤️</div><div class="fun-title">Mummy's warmth factor</div><div class="fun-desc">2,438 emojis across 3,523 messages — 0.69 emojis per message. Top 4: 🤣 😊 😘 😍. The most affectionate emoji set in the group.</div></div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- STORY -->
+<section id="story">
+  <div class="section-label reveal">Narrative</div>
+  <h2 class="section-title reveal">The story<br>of the group.</h2>
+  <div class="story-block reveal">
+    <p>This group began in <strong>June 2021</strong> with Mummy sharing a classic Hindi joke about a milk-roti recipe going viral on Facebook. It was small — 218 messages that month — but the warmth was already there. Papa BSNL was the loudest voice in those early days, dominating September 2021 with a historic birthday media dump for Revant: <strong>453 messages in a single day</strong>, the group's all-time record for years.</p>
+    <p>Then something shifted. <strong>Papa Jio joined in November 2021</strong> and slowly became the group's anchor — its most consistent conversation-starter with 1,181 thread initiations over 5 years. He doesn't always say the most, but he's the one who opens the door every morning, drops a YouTube Short, and gets everyone talking. He is the reason this group rarely goes silent.</p>
+    <p><strong>Yuvraj grew into the dominant voice</strong>: from 178 messages in 2021 to 3,136 in 2025. He is the heartbeat of the group now — thoughtful texts, late-night conversations at 10 PM, the one who always responds. In 2026, he's already sent 1,552 messages and shows no sign of slowing.</p>
+    <p><strong>Puja di</strong> operates differently from everyone else. She sends the fewest words per message (2.7 average) but the most media files (4,975 total). She is the group's silent broadcaster — images, reels, and emoji reactions over long text. Her ❤️ and 😂 do more emotional work than most paragraphs could.</p>
+    <p><strong>Papa BSNL</strong> quietly faded after mid-2023. From 829 messages in 2021, to 12 in 2023, to silence. His BSNL number was likely replaced by the Papa Jio SIM. The group never skipped a beat. And <strong>Mummy</strong> holds it all together emotionally — her 😘 and 😊 and 🤣 are a constant presence across every phase, every year, every milestone this chat has witnessed.</p>
+    <p>Today in 2026, with over <strong>30,000 messages across 5 years</strong>, this is a family that has chosen to stay close — not just in person, but daily, digitally, in a WhatsApp group that gets louder every year. A digital living room. Always open. Never quiet for long.</p>
+    <button class="share-btn" onclick="copyShareText()">📋 Copy shareable summary</button>
+  </div>
+</section>
+
+<footer>
+  <div style="font-family:'Playfair Display',serif;font-size:1.3rem;margin-bottom:.5rem;color:var(--muted)">My <em>Family</em></div>
+  <div style="margin-bottom:.5rem">June 2021 – May 2026 · 30,233 messages · 5 members · 1 family</div>
+  <div style="font-size:11px;color:var(--dim)">Made with love from WhatsApp data</div>
+</footer>
+
+<script>
+// ─── DATA ───
+const monthlyData={"2021-06":218,"2021-07":160,"2021-08":463,"2021-09":834,"2021-10":112,"2021-11":46,"2021-12":48,"2022-01":79,"2022-02":130,"2022-03":188,"2022-04":86,"2022-05":217,"2022-06":130,"2022-07":355,"2022-08":393,"2022-09":504,"2022-10":377,"2022-11":1276,"2022-12":899,"2023-01":740,"2023-02":585,"2023-03":185,"2023-04":291,"2023-05":269,"2023-06":528,"2023-07":272,"2023-08":707,"2023-09":814,"2023-10":442,"2023-11":300,"2023-12":677,"2024-01":363,"2024-02":403,"2024-03":479,"2024-04":598,"2024-05":666,"2024-06":532,"2024-07":711,"2024-08":539,"2024-09":630,"2024-10":968,"2024-11":515,"2024-12":564,"2025-01":834,"2025-02":513,"2025-03":757,"2025-04":471,"2025-05":969,"2025-06":723,"2025-07":799,"2025-08":391,"2025-09":752,"2025-10":727,"2025-11":334,"2025-12":416,"2026-01":237,"2026-02":549,"2026-03":807,"2026-04":1082,"2026-05":1022};
+const pColors=['#7c6fff','#ff6b9d','#4ecdc4','#ffd93d','#6bb5ff'];
+const searchData=[
+  {k:'yuvraj messages total',v:'10,556 messages — 34.9% of all group messages. Highest in the group.'},
+  {k:'yuvraj words',v:'30,830 words written. Average 5.2 words per message — most detailed sender.'},
+  {k:'yuvraj emoji',v:'2,971 emojis. Top: 🙏 and 🥳'},
+  {k:'yuvraj peak hour active time',v:'Peak activity at 10 PM — the group night owl.'},
+  {k:'puja di messages',v:'8,522 messages — 28.2% of total. Second most active.'},
+  {k:'puja di media photo video',v:'4,975 media files sent — the most of anyone. True media queen.'},
+  {k:'puja di words',v:'Only 2.7 words per message on average. Shows don\'t tell style.'},
+  {k:'papa jio messages',v:'6,773 messages — 22.4% of total.'},
+  {k:'papa jio initiation starter conversation',v:'1,181 conversation initiations — the most of anyone. Opens the group every day.'},
+  {k:'papa jio youtube link',v:'Papa Jio is the top link sharer. Primarily YouTube Shorts and news articles.'},
+  {k:'mummy messages',v:'3,523 messages — 11.7% of total.'},
+  {k:'mummy emoji warm',v:'2,438 emojis — 0.69 per message. Most affectionate emoji set: 🤣 😊 😘 😍'},
+  {k:'papa bsnl messages retired silent',v:'838 total messages. Last active July 22, 2023. Faded after BSNL number was replaced.'},
+  {k:'papa bsnl morning early bird',v:'Peak at 8 AM — the only early bird in the group. Everyone else peaks at 8-10 PM.'},
+  {k:'total messages all',v:'30,233 total messages across all members since June 2021.'},
+  {k:'text messages',v:'15,455 pure text messages (excluding media).'},
+  {k:'media photos videos',v:'14,778 media files shared in total across 5 years.'},
+  {k:'links youtube news',v:'3,554 links shared — roughly 2 per day every day for 5 years.'},
+  {k:'average daily messages',v:'16.7 messages per day on average across 5 years.'},
+  {k:'sunday weekday most active',v:'Sunday is the most active day with 5,982 messages — 62% more than Thursday.'},
+  {k:'birthday revant september record',v:'Sep 5, 2021 — Revant\'s birthday — 453 messages in one day. All-time record.'},
+  {k:'christmas december 2022',v:'Dec 25, 2022 — 122 messages. Second busiest day ever.'},
+  {k:'november 2022 peak month',v:'November 2022 — 1,276 messages — the busiest month until April 2026.'},
+  {k:'april 2026 new record',v:'April 2026 — 1,082 messages — the new monthly record as of May 2026.'},
+  {k:'exam jee cbse education',v:'205 exam-related messages, concentrated in 2022. JEE Main, CBSE board updates.'},
+  {k:'growth increase yearly',v:'Group grew 4× from 1,861 msgs in 2021 to 7,562 in 2025.'},
+  {k:'emoji total all',v:'10,336 total emojis across all members over 5 years.'},
+];
+
+// ─── THEME TOGGLE ───
+const html=document.documentElement;
+const toggleBtn=document.getElementById('themeToggle');
+const toggleIcon=document.getElementById('toggleIcon');
+let charts=[];
+
+function getTheme(){return html.getAttribute('data-theme')}
+function setTheme(t){
+  html.setAttribute('data-theme',t);
+  toggleIcon.textContent=t==='dark'?'🌙':'☀️';
+  localStorage.setItem('theme',t);
+  rebuildCharts();
+}
+toggleBtn.addEventListener('click',()=>setTheme(getTheme()==='dark'?'light':'dark'));
+const saved=localStorage.getItem('theme');
+if(saved)setTheme(saved);
+
+// ─── PROGRESS BAR ───
+const pb=document.getElementById('progress-bar');
+window.addEventListener('scroll',()=>{
+  const h=document.body.scrollHeight-window.innerHeight;
+  pb.style.width=(window.scrollY/h*100)+'%';
+  document.getElementById('back-top').classList.toggle('visible',window.scrollY>400);
+});
+
+// ─── COUNTER ANIMATION ───
+function animateCounters(){
+  document.querySelectorAll('.count-up').forEach(el=>{
+    const target=parseInt(el.dataset.target);
+    const dur=1800;const step=16;
+    const increment=target/(dur/step);
+    let current=0;
+    const timer=setInterval(()=>{
+      current=Math.min(current+increment,target);
+      el.textContent=Math.round(current).toLocaleString();
+      if(current>=target)clearInterval(timer);
+    },step);
+  });
+}
+setTimeout(animateCounters,400);
+
+// ─── REVEAL ───
+const observer=new IntersectionObserver(els=>{
+  els.forEach(el=>{if(el.isIntersecting)el.target.classList.add('visible')});
+},{threshold:0.08});
+document.querySelectorAll('.reveal,.reveal-left,.reveal-right').forEach(el=>observer.observe(el));
+
+// ─── PODIUM ───
+(function(){
+  const data=[
+    {name:'Yuvraj',count:10556,color:'#7c6fff',rank:'🥇'},
+    {name:'Puja di',count:8522,color:'#ff6b9d',rank:'🥈'},
+    {name:'Papa Jio',count:6773,color:'#4ecdc4',rank:'🥉'},
+  ];
+  const heights=[160,120,100];
+  const pod=document.getElementById('podium');
+  [1,0,2].forEach((i,pos)=>{
+    const d=data[i];
+    const bar=document.createElement('div');
+    bar.className='podium-bar';
+    bar.style.cssText=`height:${heights[i]}px;background:${d.color}22;border:1.5px solid ${d.color};`;
+    bar.innerHTML=`<div class="podium-rank">${d.rank}</div><div class="podium-name">${d.name}</div><div class="podium-count">${d.count.toLocaleString()}</div>`;
+    pod.appendChild(bar);
+  });
+})();
+
+// ─── EMOJI WALL ───
+(function(){
+  const emojis=[
+    ['🙏',111],['🥳',100],['😂',115],['👍',145+81+29],['❤',69+22],
+    ['😍',71+71+11],['👌',64+10],['🥰',64],['😊',136],['😘',72],
+    ['🤣',158],['🎂',40],['🎉',55],['🤦',48],['😜',35],
+    ['🎊',30],['🤔',45],['🥲',28],['😁',32],['🙄',25],
+  ];
+  const wall=document.getElementById('emojiWall');
+  emojis.sort((a,b)=>b[1]-a[1]).forEach(([e,c])=>{
+    const b=document.createElement('div');
+    b.className='emoji-bubble';
+    b.innerHTML=`<span style="font-size:18px">${e}</span><span class="emoji-count">${c}</span>`;
+    wall.appendChild(b);
+  });
+})();
+
+// ─── SEARCH ───
+document.getElementById('searchInput').addEventListener('input',function(){
+  const q=this.value.toLowerCase().trim();
+  const res=document.getElementById('search-results');
+  if(!q){res.textContent='Start typing to search across all statistics...';res.style.color='var(--muted)';return;}
+  const matches=searchData.filter(d=>d.k.includes(q)||d.v.toLowerCase().includes(q));
+  if(!matches.length){res.textContent='No results found. Try: "media", "Sunday", "emoji", "exam", "Mummy"...';res.style.color='var(--accent2)';return;}
+  res.style.color='var(--text)';
+  res.innerHTML=matches.slice(0,4).map(m=>`<div style="padding:8px 0;border-bottom:1px solid var(--border)"><span style="font-weight:500">${m.v}</span></div>`).join('');
+});
+
+// ─── COPY SHARE ───
+function copyShareText(){
+  const txt=`📊 My Family WhatsApp Wrapped\n\n5 years of messages:\n• 30,233 total messages\n• 14,778 media files shared\n• 3,554 links\n• 1,812 active days\n\nTop sender: Yuvraj Gupta (10,556 msgs)\nMost media: Puja di (4,975 files)\nTop conversation starter: Papa Jio (1,181 threads)\nBusiest day ever: Sep 5, 2021 – Revant's birthday (453 msgs!)\n\nGenerated from WhatsApp export data`;
+  navigator.clipboard.writeText(txt).then(()=>{
+    const btn=document.querySelector('.share-btn');
+    btn.textContent='✅ Copied!';setTimeout(()=>btn.innerHTML='📋 Copy shareable summary',2000);
+  });
+}
+
+// ─── BUILD CHARTS ───
+function getColors(){
+  const isDark=getTheme()==='dark';
+  return{grid:isDark?'rgba(255,255,255,0.07)':'rgba(0,0,0,0.07)',tick:isDark?'#666':'#888'};
+}
+
+function rebuildCharts(){
+  charts.forEach(c=>{try{c.destroy()}catch(e){}});
+  charts=[];
+  buildCharts();
+}
+
+function buildCharts(){
+  const {grid,tick}=getColors();
+  const months=Object.keys(monthlyData);
+
+  // Timeline
+  charts.push(new Chart(document.getElementById('timelineChart'),{
+    type:'line',
+    data:{labels:months.map(m=>m.endsWith('-01')||m.endsWith('-07')?m:''),
+    datasets:[{data:Object.values(monthlyData),borderColor:'#7c6fff',backgroundColor:'rgba(124,111,255,0.1)',borderWidth:2,pointRadius:0,fill:true,tension:.35}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>months[i[0].dataIndex]}}},
+    scales:{x:{ticks:{color:tick,font:{size:10},autoSkip:true,maxTicksLimit:14},grid:{color:grid}},y:{ticks:{color:tick,font:{size:10}},grid:{color:grid}}}}
+  }));
+
+  // Yearly stacked
+  const yearlyData={'Yuvraj':[178,1477,1924,2289,3136,1552],'Puja di':[636,1198,1735,2447,1599,1009],'Papa Jio':[31,1139,1419,1410,2153,779],'Mummy':[207,797,720,821,798,357],'Papa BSNL':[829,0,12,0,0,0]};
+  charts.push(new Chart(document.getElementById('yearlyChart'),{
+    type:'bar',
+    data:{labels:['2021','2022','2023','2024','2025','2026*'],
+    datasets:Object.keys(yearlyData).map((p,i)=>({label:p,data:yearlyData[p],backgroundColor:pColors[i],borderRadius:i===0?4:0}))},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{stacked:true,ticks:{color:tick,font:{size:12}},grid:{display:false}},y:{stacked:true,ticks:{color:tick,font:{size:10}},grid:{color:grid}}}}
+  }));
+
+  // Donut
+  charts.push(new Chart(document.getElementById('donutChart'),{
+    type:'doughnut',
+    data:{labels:['Yuvraj','Puja di','Papa Jio','Mummy','Papa BSNL'],
+    datasets:[{data:[10556,8522,6773,3523,838],backgroundColor:pColors,borderColor:getTheme()==='dark'?'#16161f':'#ffffff',borderWidth:3,hoverOffset:8}]},
+    options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false}}}
+  }));
+
+  // Initiation
+  charts.push(new Chart(document.getElementById('initiationChart'),{
+    type:'bar',
+    data:{labels:['Papa Jio','Yuvraj','Puja di','Mummy','Papa BSNL'],
+    datasets:[{data:[1181,775,737,448,99],backgroundColor:['#4ecdc4','#7c6fff','#ff6b9d','#ffd93d','#6bb5ff'],borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:tick,font:{size:11}},grid:{display:false}},y:{ticks:{color:tick,font:{size:10}},grid:{color:grid}}}}
+  }));
+
+  // Emoji chart
+  charts.push(new Chart(document.getElementById('emojiChart'),{
+    type:'bar',
+    data:{labels:['Yuvraj','Puja di','Papa Jio','Mummy','Papa BSNL'],
+    datasets:[{data:[2971,2678,2140,2438,109],backgroundColor:pColors,borderRadius:6}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:tick,font:{size:12}},grid:{display:false}},y:{ticks:{color:tick,font:{size:10}},grid:{color:grid}}}}
+  }));
+
+  // Weekday
+  charts.push(new Chart(document.getElementById('weekdayChart'),{
+    type:'bar',
+    data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'],
+    datasets:[{data:[4274,3883,3715,3683,4628,4511,5982],backgroundColor:['rgba(124,111,255,.35)','rgba(124,111,255,.35)','rgba(124,111,255,.35)','rgba(124,111,255,.35)','rgba(124,111,255,.55)','rgba(124,111,255,.7)','#7c6fff'],borderRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:tick,font:{size:11}},grid:{display:false}},y:{ticks:{color:tick,font:{size:10}},grid:{color:grid}}}}
+  }));
+
+  // Words
+  charts.push(new Chart(document.getElementById('wordsChart'),{
+    type:'bar',
+    data:{labels:['call','kiya','abhi','lena','baat','gaya','liye','happy','exam','phone'],
+    datasets:[{data:[312,367,348,271,234,226,212,168,176,128],backgroundColor:'rgba(255,107,157,.6)',borderRadius:4}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+    scales:{x:{ticks:{color:tick,font:{size:10}},grid:{color:grid}},y:{ticks:{color:tick,font:{size:11}},grid:{display:false}}}}
+  }));
+}
+
+// ─── HEATMAP ───
+(function(){
+  const personHours={'Yuvraj':[28,18,17,10,10,12,18,46,96,74,104,112,137,146,127,154,178,199,204,213,286,258,312,173],'Puja di':[61,24,21,15,13,40,74,103,261,181,289,305,360,341,295,323,348,388,471,476,521,399,385,176],'Papa Jio':[24,13,12,7,8,42,118,201,489,309,564,544,641,594,499,559,614,665,714,678,601,598,434,226],'Mummy':[23,11,10,6,5,18,32,52,143,106,164,175,219,219,188,204,218,241,266,268,361,259,211,103],'Papa BSNL':[6,2,2,1,1,3,14,126,54,26,41,36,34,36,31,36,40,41,56,62,71,37,37,43]};
+  const hmap=document.getElementById('heatmap');
+  const maxVal=Math.max(...Object.values(personHours).flat());
+  const tooltip=document.getElementById('tooltip');
+  Object.entries(personHours).forEach(([name,hours],pi)=>{
+    const row=document.createElement('div');row.className='heatmap-row';
+    const lbl=document.createElement('div');lbl.className='heatmap-lbl';lbl.textContent=name.split(' ')[0];row.appendChild(lbl);
+    const hex=pColors[pi];
+    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    hours.forEach((v,h)=>{
+      const cell=document.createElement('div');cell.className='heatmap-cell';
+      const alpha=0.07+(v/maxVal)*0.85;
+      cell.style.background=`rgba(${r},${g},${b},${alpha.toFixed(2)})`;
+      cell.addEventListener('mouseenter',e=>{
+        tooltip.style.display='block';
+        tooltip.textContent=`${name} · ${h}:00 — ${v} msgs`;
+      });
+      cell.addEventListener('mousemove',e=>{
+        tooltip.style.left=(e.clientX+12)+'px';tooltip.style.top=(e.clientY-30)+'px';
+      });
+      cell.addEventListener('mouseleave',()=>tooltip.style.display='none');
+      row.appendChild(cell);
+    });
+    hmap.appendChild(row);
+  });
+})();
+
+buildCharts();
+</script>
+</body>
+</html>
